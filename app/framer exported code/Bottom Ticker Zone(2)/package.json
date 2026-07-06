@@ -1,0 +1,30 @@
+{
+  "name": "Bottom Ticker Zone",
+  "version": "1.0.0",
+  "description": "Exported Framer components: BottomTickerZone",
+  "type": "module",
+  "main": "BottomTickerZone.js",
+  "types": "BottomTickerZone.d.ts",
+  "exports": {
+    ".": {
+      "import": "./BottomTickerZone.js",
+      "types": "./BottomTickerZone.d.ts"
+    },
+    "./BottomTickerZone": {
+      "import": "./BottomTickerZone.js",
+      "types": "./BottomTickerZone.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "framer-motion": ">=10.0.0"
+  },
+  "keywords": [
+    "framer",
+    "react",
+    "components",
+    "exported"
+  ],
+  "license": "MIT"
+}

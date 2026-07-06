@@ -1,0 +1,43 @@
+/**
+ * Project design tokens extracted from the Framer canvas.
+ * Import this file once at the root of your app so the
+ * --token-<uuid> CSS variables referenced by exported components resolve.
+ */
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/lato/v25/S6u9w4BMUTPHh50XewqFGC_p9dw.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/lato/v25/S6uyw4BMUTPHvxw6XweuBCY.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/lato/v25/S6u9w4BMUTPHh6UVewqFGC_p9dw.woff2') format('woff2');
+}
+
+/* Fallback @imports for families not covered by @font-face above. */
+/* These rely on Google Fonts publishing the family under the exact name; */
+/* will silently 404 for custom or non-Google fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --token-8c13092a-4700-4647-9d96-fd61a1d0ed02: rgb(212, 60, 30);
+  --token-92b92915-03cb-4b4c-8cca-91ffd0aa5f5a: rgb(153, 40, 40);
+}
+
+.text-style-wuJ0Ljf6G {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.6em;
+  color: #666;
+}

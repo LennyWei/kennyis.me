@@ -2,9 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  basePath: "/kennyis.me", // Uncomment this line if deploying to a subdirectory
+  basePath: process.env.NODE_ENV === "production" ? "/kennyis.me" : "",
   output: "export",
-  reactStrictMode: true,
+  reactStrictMode: false,
+  turbopack: {
+    root: __dirname,
+  },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
