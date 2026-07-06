@@ -199,8 +199,9 @@ const ICON_SEQUENCE: IconSlot[] = [
   { kind: "icon", component: HandFilledIcon, props: { size: 18, scaleX: 1.05, scaleY: 1.05,
     animation: {
       idle: [
-        { type: "slide", from: { y: 0 }, to: { y: -4 }, duration: 0.5, ease: "easeIn" },
-        { type: "slide", from: { y: -4 }, to: { y: 0 }, duration: 0.5, ease: "easeOut" },
+        { type: "slide", from: { y: 0 }, to: { y: -6 }, duration: 0.3, ease: [0.64, 0, 0.78, 0] },
+        { type: "slide", from: { y: -6 }, to: { y: 0 }, duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+        { type: "pause", duration: 1 },
       ],
     }
   } },
@@ -209,8 +210,9 @@ const ICON_SEQUENCE: IconSlot[] = [
   { kind: "icon", component: HandFilledIcon, props: { size: 18, scaleX: 1.05, scaleY: 1.05,
     animation: {
       idle: [
-        { type: "slide", from: { y: -4 }, to: { y: 0 }, duration: 0.5, ease: "easeOut" },
-        { type: "slide", from: { y: 0 }, to: { y: -4 }, duration: 0.5, ease: "easeIn" },
+        { type: "pause", duration: 1 },
+        { type: "slide", from: { y: 0 }, to: { y: -6 }, duration: 0.3, ease: [0.64, 0, 0.78, 0] },
+        { type: "slide", from: { y: -6 }, to: { y: 0 }, duration: 0.3, ease: [0.22, 1, 0.36, 1] },
       ],
     }
    } },
