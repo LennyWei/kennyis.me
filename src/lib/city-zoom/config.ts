@@ -28,15 +28,15 @@ export interface CityZoomConfig {
 }
 
 export const defaultCityZoomConfig: CityZoomConfig = {
-  speed: 1.2,
-  laneCount: 28,
-  streakDensity: 1.4,
-  streakLength: 0.35,
-  perspective: 2.2,
-  glow: 1.1,
-  chromaticAberration: 0.6,
-  colorA: "#f4b360",
-  colorB: "#d6833c",
-  bgTop: "#1b100b",
-  bgBottom: "#0c0a09",
-};
+  "speed": 0.5999999999999999,
+  "laneCount": 42,
+  "streakDensity": 0.2,
+  "streakLength": 0.95,
+  "perspective": 6,
+  "glow": 1.9000000000000001,
+  "chromaticAberration": 1,
+  "colorA": "#f4b360",
+  "colorB": "#d6833c",
+  "bgTop": "#1b100b",
+  "bgBottom": "#0c0a09"
+}

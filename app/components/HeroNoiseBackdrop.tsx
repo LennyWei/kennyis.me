@@ -1,35 +1,65 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import CityZoomBackdrop from "./CityZoomBackdrop";
+import { useCityZoomControls } from "./CityZoomControls";
 
 export default function HeroNoiseBackdrop() {
   const shouldReduceMotion = useReducedMotion() ?? false;
+  const config = useCityZoomControls();
 
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+      <CityZoomBackdrop config={config} />
+
       <motion.div
         className="absolute inset-0"
-        animate={shouldReduceMotion ? undefined : { x: [0, -10, 8, 0], y: [0, 6, -8, 0], scale: [1.03, 1.06, 1.04, 1.03] }}
-        transition={shouldReduceMotion ? undefined : { duration: 26, ease: "easeInOut", repeat: Infinity }}
+        animate={
+          shouldReduceMotion
+            ? undefined
+            : { x: [0, -12, 10, 0], y: [0, 6, -8, 0], scale: [1, 1.02, 1.01, 1] }
+        }
+        transition={
+          shouldReduceMotion
+            ? undefined
+            : { duration: 24, ease: "easeInOut", repeat: Infinity }
+        }
         style={{
           background:
-            "radial-gradient(circle at 18% 20%, rgba(214, 131, 60, 0.28), transparent 0 22%), radial-gradient(circle at 72% 28%, rgba(108, 53, 18, 0.3), transparent 0 24%), radial-gradient(circle at 48% 68%, rgba(244, 179, 96, 0.14), transparent 0 20%), linear-gradient(180deg, rgba(56, 31, 18, 0.98) 0%, rgba(27, 16, 11, 0.98) 52%, rgba(12, 10, 9, 0.99) 100%)",
-          backgroundSize: "cover, cover, cover, cover",
-          filter: "saturate(1.08) contrast(1.05)",
-        }}
-      />
-      <motion.div
-        className="absolute inset-0 opacity-55"
-        animate={shouldReduceMotion ? undefined : { x: [0, 12, -8, 0], y: [0, -10, 6, 0], scale: [1.01, 1.04, 1.02, 1.01] }}
-        transition={shouldReduceMotion ? undefined : { duration: 18, ease: "easeInOut", repeat: Infinity }}
-        style={{
-          background:
-            "repeating-linear-gradient(115deg, rgba(255, 238, 205, 0.11) 0 1px, transparent 1px 9px), repeating-linear-gradient(25deg, rgba(134, 72, 29, 0.16) 0 2px, transparent 2px 14px), radial-gradient(circle at 50% 50%, rgba(255, 180, 104, 0.18), transparent 56%)",
-          backgroundSize: "180px 180px, 240px 240px, cover",
+            "radial-gradient(circle at 50% 14%, rgba(255, 223, 184, 0.16), transparent 20%), radial-gradient(circle at 24% 34%, rgba(255, 170, 92, 0.18), transparent 22%), radial-gradient(circle at 78% 42%, rgba(109, 55, 21, 0.24), transparent 26%), linear-gradient(180deg, rgba(9, 8, 8, 0.05) 0%, rgba(9, 8, 8, 0.22) 58%, rgba(9, 8, 8, 0.5) 100%)",
           mixBlendMode: "screen",
-          filter: "blur(1px)",
         }}
       />
+
+      <motion.div
+        className="absolute inset-x-0 bottom-0 h-[42%]"
+        animate={shouldReduceMotion ? undefined : { y: [0, -8, 0], opacity: [0.4, 0.55, 0.4] }}
+        transition={shouldReduceMotion ? undefined : { duration: 16, ease: "easeInOut", repeat: Infinity }}
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(12, 10, 9, 0) 0%, rgba(12, 10, 9, 0.28) 42%, rgba(12, 10, 9, 0.72) 100%)",
+        }}
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center px-6">
+        <motion.div
+          className="pointer-events-none max-w-2xl text-center"
+          initial={{ opacity: 0, y: 14 }}
+          animate={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+        >
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.48em] text-amber-100/60">
+            City zoom / live tune
+          </p>
+          <h2 className="text-balance text-4xl font-semibold tracking-tight text-amber-50 sm:text-5xl lg:text-6xl">
+            Fast city, slow horizon
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-amber-100/72 sm:text-base">
+            Tune the panel in the corner, then copy the values into the default
+            city zoom config when the motion and color balance feels right.
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }

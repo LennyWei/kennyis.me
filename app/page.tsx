@@ -10,10 +10,6 @@ export default function Home() {
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 12%, rgba(217,130,58,0.16), transparent 28%), radial-gradient(circle at 18% 18%, rgba(255,255,255,0.05), transparent 20%), linear-gradient(180deg, #11100f 0%, #0b0b0b 42%, #070707 100%)",
-        }}
       />
       <ThinHeader />
       <div
@@ -28,7 +24,7 @@ export default function Home() {
           >
             <HeroNoiseBackdrop />
             <div className="relative z-10">
-              <MiddleGradientSwitcherZone />
+              {/* <MiddleGradientSwitcherZone /> */}
             </div>
           </section>
           <BottomTickerZone />
