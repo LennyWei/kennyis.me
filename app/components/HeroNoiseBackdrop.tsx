@@ -4,7 +4,7 @@ import DirectionalBlurBackground from "./DirectionalBlurBackground";
 
 export default function HeroNoiseBackdrop() {
   return (
-    <section className="relative isolate min-h-[72vh] w-full overflow-hidden">
+    <section className="relative isolate min-h-[40vh] w-full overflow-hidden">
       <DirectionalBlurBackground
         imagePath="/images/lastshotframe1.png"
         panSpeed={0.2}

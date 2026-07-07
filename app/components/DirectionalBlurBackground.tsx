@@ -1,7 +1,7 @@
 "use client"; // Critical for Next.js to allow canvas rendering
 
 import { useRef, useMemo, Suspense } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { vertexShader, fragmentShader } from "@/src/lib/city-zoom/shader"; // Adjust path as needed
@@ -54,10 +54,11 @@ const ShaderPlane = ({ imagePath, panSpeed, stretch, blurAmount, updateInterval 
       materialRef.current.uniforms.u_blurAmount.value = blurAmount;
     }
   });
+  const { viewport } = useThree();
 
   return (
-    <mesh>
-      <planeGeometry args={[1000, 400]} />
+    <mesh scale={[viewport.width, viewport.height, 1]}>
+      <planeGeometry args={[1, 1]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}

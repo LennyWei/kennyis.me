@@ -16,18 +16,17 @@ export default function Home() {
         className="relative mx-auto flex min-h-screen w-full flex-col overflow-x-hidden px-4 sm:px-6 lg:px-8"
         style={{ maxWidth: 1600 }}
       >
-        <main className="flex flex-1 flex-col items-center justify-start gap-3 py-0 sm:py-12 lg:py-16">
-          <TopZone />
+        <main className="mx-auto flex w-[70vw] max-w-none flex-1 flex-col items-stretch justify-start gap-6 py-0 sm:py-12 lg:py-16">
+          <TopZone className="max-w-none" />
           <section
-            className="relative w-screen overflow-visible py-10 sm:py-12 lg:py-16"
-            style={{ marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)" }}
+            className="relative w-full overflow-visible"
           >
             <HeroNoiseBackdrop />
             <div className="relative z-10">
               {/* <MiddleGradientSwitcherZone /> */}
             </div>
           </section>
-          <BottomTickerZone />
+          <BottomTickerZone className="max-w-none" style={{ maxWidth: "none" }} />
         </main>
         
       </div>
