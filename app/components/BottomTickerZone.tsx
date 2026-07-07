@@ -1,7 +1,7 @@
 "use client";
 import type { CSSProperties, ComponentType } from "react";
 import { motion } from "framer-motion";
-import { useIconAnimation, type IconAnimationConfig } from "./IconAnimation";
+import { getInitialFromConfig, useElementAnimation, type ElementAnimationConfig } from "./ElementAnimation";
 
 export interface BottomZoneProps {
   className?: string;
@@ -34,7 +34,7 @@ export type BottomZoneIconProps = {
   gapLeft?: number | string;
   gapRight?: number | string;
   style?: CSSProperties;
-  animation?: IconAnimationConfig;
+  animation?: ElementAnimationConfig;
 };
 
 type IconBaseProps = BottomZoneIconProps & {
@@ -54,14 +54,6 @@ function toCssSize(value: number | string | undefined, fallback: number) {
   return typeof value === "number" ? `${value}px` : value;
 }
 
-function getInitialFromConfig(config?: IconAnimationConfig) {
-  const first = config?.loadIn?.[0];
-  if (first?.type === "slide") {
-    return { x: first.from.x ?? 0, y: first.from.y ?? 0 };
-  }
-  return undefined;
-}
-
 function IconBase({
   src,
   className = "",
@@ -76,7 +68,7 @@ function IconBase({
   style,
   animation,
 }: IconBaseProps) {
-  const scope = useIconAnimation(animation);
+  const scope = useElementAnimation({ config: animation });
   const initial = getInitialFromConfig(animation);
 
   return (
@@ -225,6 +217,28 @@ export default function BottomZone({
 }: BottomZoneProps) {
   const monologue = messages.join("  ·  ");
 
+  // Animation config for the icon row
+  const config = {
+    loadIn: [
+      {
+        type: "slide",
+        from: { x: 48 },
+        to: { x: 0 },
+        duration: 0.5,
+        ease: "easeOut",
+      },
+      {
+        type: "fade",
+        to: 1,
+        duration: 0.5,
+      }
+    ],
+  } satisfies ElementAnimationConfig;
+
+  const iconRowScope = useElementAnimation({ config })
+
+
+
   return (
     <footer
       aria-label="Bottom zone"
@@ -236,12 +250,14 @@ export default function BottomZone({
           className="w-full max-w-280 text-center text-[17px] font-medium uppercase tracking-[0.20em] text-[#f32333] sm:text-[9px]"
           style={{ fontFamily: '"Lato", sans-serif' }}
         >
-          <p className="mx-auto max-w-full text-balance leading-[1.25]">{monologue}</p>
+          <p className="mx-auto max-w-full text-balance leading-tight">{monologue}</p>
         </div>
 
         <div className="h-px w-full max-w-280 bg-[#f32333]/45" />
 
-        <div className="flex w-full max-w-280 flex-wrap items-center justify-center gap-y-4">
+
+        {/*Remember im setting opacity to 0, then animating it to 1*/}
+        <div ref={iconRowScope} className="opacity-0 flex w-full max-w-280 flex-wrap items-center justify-center gap-y-4">
           {ICON_SEQUENCE.map((item, index) => {
             if (item.kind === "label") {
               return <TextMarker key={`portfolio-${index}`} />;
