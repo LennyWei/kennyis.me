@@ -97,6 +97,41 @@ function applyStagger(
   };
 }
 
+/**
+ * Throttles the transition's easing function to match a specific frames-per-second rate.
+ */
+function applyFpsThrottling(
+  transition: StepTransition,
+  fps?: number,
+): StepTransition {
+  if (!fps) return transition;
+
+  const duration = transition.duration ?? 0.5;
+  const baseEase = transition.ease;
+
+  // Map standard Framer Motion easing strings to core functions for quantization
+  let easeFunc = (t: number) => t;
+  if (typeof baseEase === "string") {
+    if (baseEase === "linear") easeFunc = (t) => t;
+    else if (baseEase === "easeIn") easeFunc = (t) => t * t;
+    else if (baseEase === "easeOut") easeFunc = (t) => t * (2 - t);
+    else if (baseEase === "easeInOut") easeFunc = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  } else if (typeof baseEase === "function") {
+    easeFunc = baseEase;
+  }
+
+  const totalFrames = Math.max(1, Math.round(duration * fps));
+
+  return {
+    ...transition,
+    ease: (t: number) => {
+      if (t >= 1) return 1;
+      const currentFrame = Math.floor(t * totalFrames);
+      return easeFunc(currentFrame / totalFrames);
+    },
+  };
+}
+
 async function animateTarget(
   animate: AnimateFn,
   target: AnimateTarget,
@@ -124,6 +159,7 @@ async function runStep(
   step: AnimationStep,
   rotation: { current: number },
   stagger?: number,
+  fps?: number,
 ) {
   switch (step.type) {
     case "pause":
@@ -139,40 +175,64 @@ async function runStep(
         animate,
         target,
         { x: [fromX, toX], y: [fromY, toY] },
-        {
+        applyFpsThrottling({
           duration: step.duration ?? 0.5,
           ease: step.ease ?? "easeOut",
           delay: step.delay ?? 0,
-        },
+          }, fps),
         stagger,
       );
       return;
     }
     case "spin": {
       rotation.current += step.degrees;
-      await animateTarget(animate, target, { rotate: rotation.current }, {
-        duration: step.duration ?? 1,
-        ease: step.ease ?? "easeInOut",
-        delay: step.delay ?? 0,
-      }, stagger);
+      await animateTarget(
+        animate,
+        target,
+        { rotate: rotation.current },
+        applyFpsThrottling({
+          duration: step.duration ?? 1,
+          ease: step.ease ?? "easeInOut",
+          delay: step.delay ?? 0,
+        }, fps),
+        stagger,
+      );
       return;
     }
     case "fade":
-      await animateTarget(animate, target, { opacity: step.to ?? 1 }, {
-        duration: step.duration ?? 0.5,
-        ease: step.ease ?? "easeInOut",
-        delay: step.delay ?? 0,
-      }, stagger);
+      await animateTarget(
+        animate,
+        target,
+        { opacity: step.to ?? 1 },
+        applyFpsThrottling({
+          duration: step.duration ?? 0.5,
+          ease: step.ease ?? "easeInOut",
+          delay: step.delay ?? 0,
+        }, fps),
+        stagger,
+      );
       return;
     case "scale":
-      await animateTarget(animate, target, { scale: step.to ?? 1 }, {
-        duration: step.duration ?? 0.5,
-        ease: step.ease ?? "easeInOut",
-        delay: step.delay ?? 0,
-      }, stagger);
+      await animateTarget(
+        animate,
+        target,
+        { scale: step.to ?? 1 },
+        applyFpsThrottling({
+          duration: step.duration ?? 0.5,
+          ease: step.ease ?? "easeInOut",
+          delay: step.delay ?? 0,
+        }, fps),
+        stagger,
+      );
       return;
     case "custom":
-      await animateTarget(animate, target, step.keyframes, step.transition ?? {}, stagger);
+      await animateTarget(
+        animate,
+        target,
+        step.keyframes,
+        applyFpsThrottling(step.transition ?? {}, fps),
+        stagger,
+      );
       return;
   }
 }
@@ -183,12 +243,15 @@ export interface UseElementAnimationOptions {
   targetSelector?: string;
   /** stagger delay in seconds between matched children, only used with targetSelector */
   stagger?: number;
+  /** Target frame rate for the animations (e.g., 12 for a retro/stop-motion feel) */
+  fps?: number;
 }
 
 export function useElementAnimation({
   config,
   targetSelector,
   stagger,
+  fps = 12,
 }: UseElementAnimationOptions = {}) {
   const [scope, animate] = useAnimate();
   const rotation = useRef(0);
@@ -221,7 +284,7 @@ export function useElementAnimation({
     async function play(steps: AnimationStep[]) {
       for (const step of steps) {
         if (cancelled) return;
-        await runStep(animate, resolveTarget(), step, rotation, stagger);
+        await runStep(animate, resolveTarget(), step, rotation, stagger, fps);
       }
     }
 

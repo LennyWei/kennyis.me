@@ -16,17 +16,10 @@ export const metadata: Metadata = {
   title: "Kenny Liang",
   description: "Kenny Liang portfolio",
 };
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="bg-slate-900 text-white antialiased">
         {children}
       </body>
     </html>
