@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { useAnimate, type Easing } from "framer-motion";
+import { useAnimate, type Easing, cubicBezier } from "framer-motion";
 
 export type SlideStep = {
   type: "slide";
@@ -38,6 +38,11 @@ export type ScaleStep = {
 
 export type PauseStep = { type: "pause"; duration: number };
 
+export type ParallelStep = {
+  type: "parallel";
+  steps: AnimationStep[];
+};
+
 export type CustomStep = {
   type: "custom";
   keyframes: Record<string, unknown>;
@@ -50,6 +55,7 @@ export type AnimationStep =
   | FadeStep
   | ScaleStep
   | PauseStep
+  | ParallelStep
   | CustomStep;
 
 export interface ElementAnimationConfig {
@@ -75,11 +81,29 @@ function normalizeTargets(target: AnimateTarget) {
 export function getInitialFromConfig(config?: ElementAnimationConfig) {
   const first = config?.loadIn?.[0];
 
-  if (first?.type === "slide") {
-    return { x: first.from.x ?? 0, y: first.from.y ?? 0 };
-  }
+  return getInitialForStep(first);
+}
 
-  return undefined;
+function getInitialForStep(step?: AnimationStep): Record<string, unknown> | undefined {
+  if (!step) return undefined;
+
+  switch (step.type) {
+    case "slide":
+      return { x: step.from.x ?? 0, y: step.from.y ?? 0 };
+    case "fade":
+      // fade always animates *to* step.to, so the implicit "from" is the opposite end
+      return { opacity: step.to === 0 ? 1 : 0 };
+    case "scale":
+      return { scale: step.to === 1 ? 0 : 1 };
+    case "parallel": {
+      // merge initials from each parallel branch
+      return step.steps.reduce<Record<string, unknown>>((acc, s) => {
+        return { ...acc, ...getInitialForStep(s) };
+      }, {});
+    }
+    default:
+      return undefined;
+  }
 }
 
 function applyStagger(
@@ -110,15 +134,17 @@ function applyFpsThrottling(
   const baseEase = transition.ease;
 
   // Map standard Framer Motion easing strings to core functions for quantization
-  let easeFunc = (t: number) => t;
-  if (typeof baseEase === "string") {
-    if (baseEase === "linear") easeFunc = (t) => t;
-    else if (baseEase === "easeIn") easeFunc = (t) => t * t;
-    else if (baseEase === "easeOut") easeFunc = (t) => t * (2 - t);
-    else if (baseEase === "easeInOut") easeFunc = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-  } else if (typeof baseEase === "function") {
-    easeFunc = baseEase;
-  }
+let easeFunc = (t: number) => t;
+if (typeof baseEase === "string") {
+  if (baseEase === "linear") easeFunc = (t) => t;
+  else if (baseEase === "easeIn") easeFunc = (t) => t * t;
+  else if (baseEase === "easeOut") easeFunc = (t) => t * (2 - t);
+  else if (baseEase === "easeInOut") easeFunc = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+} else if (Array.isArray(baseEase) && baseEase.length === 4) {
+  easeFunc = cubicBezier(baseEase[0], baseEase[1], baseEase[2], baseEase[3]);
+} else if (typeof baseEase === "function") {
+  easeFunc = baseEase;
+}
 
   const totalFrames = Math.max(1, Math.round(duration * fps));
 
@@ -164,6 +190,11 @@ async function runStep(
   switch (step.type) {
     case "pause":
       await new Promise((resolve) => setTimeout(resolve, step.duration * 1000));
+      return;
+    case "parallel":
+      await Promise.all(
+        step.steps.map((s) => runStep(animate, target, s, rotation, stagger, fps)),
+      );
       return;
     case "slide": {
       const fromX = step.from.x ?? 0;
@@ -271,6 +302,12 @@ export function useElementAnimation({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (stagger && !targetSelector) {
+      console.warn("useElementAnimation: `stagger` has no effect without `targetSelector`.");
+    }
+  }, [stagger, targetSelector]);
+  
   useEffect(() => {
     if (!config || (!config.loadIn?.length && !config.idle?.length)) return;
     let cancelled = false;

@@ -221,21 +221,20 @@ export default function BottomZone({
   const config = {
     loadIn: [
       {
-        type: "slide",
-        from: { x: 48 },
-        to: { x: 0 },
-        duration: 0.5,
-        ease: "easeOut",
+        type: "parallel",
+        steps: [
+          { type: "slide", from: { x: 48 }, to: { x: 0 }, duration: 0.5, ease: "easeOut" },
+          { type: "fade", to: 1, duration: 0.5 },
+        ],
       },
-      {
-        type: "fade",
-        to: 1,
-        duration: 0.5,
-      }
     ],
   } satisfies ElementAnimationConfig;
 
-  const iconRowScope = useElementAnimation({ config })
+  const iconRowScope = useElementAnimation({ 
+    config,
+    targetSelector: ".ticker-item", // matches each icon wrapper below
+    stagger: 0.05, // 50ms between each icon's slide-in
+   })
 
 
 
@@ -257,16 +256,20 @@ export default function BottomZone({
 
 
         {/*Remember im setting opacity to 0, then animating it to 1*/}
-        <div ref={iconRowScope} className="opacity-0 flex w-full max-w-280 flex-wrap items-center justify-center gap-y-4">
+        <div ref={iconRowScope} className="flex w-full max-w-280 flex-wrap items-center justify-center gap-y-4">
           {ICON_SEQUENCE.map((item, index) => {
             if (item.kind === "label") {
-              return <TextMarker key={`portfolio-${index}`} />;
+              return (
+                <span key={`portfolio-${index}`} className="ticker-item inline-flex items-center">
+                  <TextMarker />
+                </span>
+              );
             }
 
             const Icon = item.component;
 
             return (
-              <span key={`${Icon.name}-${index}`} className="inline-flex items-center">
+              <span key={`${Icon.name}-${index}`} className="ticker-item inline-flex items-center">
                 <Icon {...item.props} />
               </span>
             );

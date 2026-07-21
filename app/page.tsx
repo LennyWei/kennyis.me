@@ -1,9 +1,10 @@
 import BottomTickerZone from "./components/BottomTickerZone";
 import HeroNoiseBackdrop from "./components/HeroNoiseBackdrop";
-import MiddleGradientSwitcherZone from "./components/MiddleGradientSwitcherZone";
+import CarouselManager from "./components/CarouselManager";
 import { SnapSection, SnapScroll } from "./components/SnapScroll";
 import ThinHeader from "./components/ThinHeader";
 import TopZone from "./components/TopZone";
+import ExampleCarouselSection from "./components/Examplecarouselitem";
 
 export default function Home() {
   return (
@@ -29,7 +30,7 @@ export default function Home() {
         </SnapSection>
         <SnapSection index={1} id="other" className="relative z-10">
           <div className="relative z-10">
-            <MiddleGradientSwitcherZone />
+            <ExampleCarouselSection />
           </div>
         </SnapSection>
       </SnapScroll>
