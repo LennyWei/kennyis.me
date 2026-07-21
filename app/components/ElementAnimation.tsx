@@ -141,7 +141,9 @@ if (typeof baseEase === "string") {
   else if (baseEase === "easeOut") easeFunc = (t) => t * (2 - t);
   else if (baseEase === "easeInOut") easeFunc = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 } else if (Array.isArray(baseEase) && baseEase.length === 4) {
-  easeFunc = cubicBezier(baseEase[0], baseEase[1], baseEase[2], baseEase[3]);
+      // baseEase may be typed as Easing; assert elements are numbers for cubicBezier
+      const [p0, p1, p2, p3] = baseEase as unknown as number[];
+      easeFunc = cubicBezier(p0, p1, p2, p3);
 } else if (typeof baseEase === "function") {
   easeFunc = baseEase;
 }
