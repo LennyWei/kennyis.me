@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useReducedMotion, type MotionValue } from "framer-motion";
+import { createFrameLimiter } from "./CarouselFrameLimiter";
 
 /**
  * CarouselManager
@@ -60,6 +61,13 @@ export interface CarouselRenderMeta {
   speedFactor: MotionValue<number>;
   /** The `minSpeedFactor` this pass was configured with — use it to normalize `speedFactor` to a clean 0–1 range if you want. */
   minSpeedFactor: number;
+  /**
+   * The `fps` this carousel is configured with (undefined = native frame
+   * rate). If your item runs its own per-frame animation (like a spin),
+   * pass this to `createFrameLimiter` from `./frameLimiter` so it steps at
+   * the same rate instead of staying smooth while the carousel goes choppy.
+   */
+  fps?: number;
 }
 
 export interface CarouselManagerProps<T> {
@@ -114,6 +122,15 @@ export interface CarouselManagerProps<T> {
    * there is what keeps the blend kink-free.
    */
   arcBump?: (progress: number) => number;
+
+  /**
+   * Quantizes visual updates to roughly this many frames per second,
+   * independent of the browser's actual refresh rate — e.g. `12` for a
+   * deliberately choppy, retro/stop-motion feel. Durations are unaffected;
+   * only how often the change is drawn is throttled. Default: undefined
+   * (native frame rate, fully smooth).
+   */
+  fps?: number;
 
   /** Timing, in ms, for each portion of the single continuous pass. */
   enterDurationMs?: number;
@@ -192,10 +209,11 @@ export default function CarouselManager<T>({
   height,
   travelDistance = 150,
   minSpeedFactor = 0.15,
-  blendEase = easeSmoothstep,
+  blendEase = easeSmootherstep,
   arcHeight = 0,
   scaleBoost = 0,
   arcBump = bumpHann,
+  fps,
   enterDurationMs = 550,
   slowDurationMs = 2000,
   exitDurationMs = 550,
@@ -299,6 +317,7 @@ export default function CarouselManager<T>({
     let cumulativeIntegral = 0;
     let lastTime: number | null = null;
     let finished = false;
+    const limiter = createFrameLimiter(fps);
 
     x.set(fromX);
     y.set(0);
@@ -320,20 +339,23 @@ export default function CarouselManager<T>({
         elapsedMs = Math.min(elapsedMs + dt, totalDurationMs);
         const u = elapsedMs / totalDurationMs;
         const f = speedFactorAt(u, slowStart, slowEnd, minSpeedFactor, blendEase);
-        speedFactor.set(f);
         cumulativeIntegral += f * (dt / totalDurationMs);
         const normalizedProgress = Math.min(cumulativeIntegral / z, 1);
-        x.set(fromX + distance * normalizedProgress);
-
         const bump = arcBump(normalizedProgress);
-        y.set(arcHeight * bump);
-        scale.set(1 + scaleBoost * bump);
+        const isDone = elapsedMs >= totalDurationMs;
 
-        if (elapsedMs >= totalDurationMs) {
+        // Underlying math above always runs at full real frame rate (correct
+        // timing). Only whether we PUSH it to the motion values is throttled
+        // — that's what turns "smooth" into "choppy" rather than "slow."
+        if (limiter.shouldStep(dt) || isDone) {
+          speedFactor.set(f);
+          x.set(isDone ? toX : fromX + distance * normalizedProgress);
+          y.set(isDone ? 0 : arcHeight * bump);
+          scale.set(isDone ? 1 : 1 + scaleBoost * bump);
+        }
+
+        if (isDone) {
           finished = true;
-          x.set(toX);
-          y.set(0);
-          scale.set(1);
           if (autoplay && (loop || activeIndex < safeItems.length - 1)) {
             setActiveIndex((current) => (current + 1) % safeItems.length);
           }
@@ -381,6 +403,7 @@ export default function CarouselManager<T>({
                 speedFactor,
                 minSpeedFactor,
                 requestPause,
+                fps,
               })
             : null}
         </motion.div>
@@ -392,7 +415,7 @@ export default function CarouselManager<T>({
             type="button"
             aria-label="Previous"
             onClick={goPrev}
-            className="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur-md transition-transform hover:scale-[1.04]"
+            className="absolute left-3 top-1/2 z-0 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur-md transition-transform hover:scale-[1.04]"
             style={{ borderColor, background: "rgba(8,8,8,0.6)", color: textColor }}
           >
             ←
@@ -401,12 +424,12 @@ export default function CarouselManager<T>({
             type="button"
             aria-label="Next"
             onClick={goNext}
-            className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur-md transition-transform hover:scale-[1.04]"
+            className="absolute right-3 top-1/2 z-0 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur-md transition-transform hover:scale-[1.04]"
             style={{ borderColor, background: "rgba(8,8,8,0.6)", color: textColor }}
           >
             →
           </button>
-          <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+          {/* <div className="absolute bottom-25 left-1/2 flex -translate-x-1/2 gap-1.5 z-0">
             {safeItems.map((_, dotIndex) => (
               <button
                 key={dotIndex}
@@ -420,7 +443,7 @@ export default function CarouselManager<T>({
                 }}
               />
             ))}
-          </div>
+          </div> */}
         </>
       ) : null}
     </div>

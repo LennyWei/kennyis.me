@@ -1,11 +1,10 @@
 import BottomTickerZone from "./components/BottomTickerZone";
 import HeroNoiseBackdrop from "./components/HeroNoiseBackdrop";
-import CarouselManager from "./components/CarouselManager";
+import CarouselManager from "./components/Carousel/CarouselManager";
 import { SnapSection, SnapScroll } from "./components/SnapScroll";
 import ThinHeader from "./components/ThinHeader";
 import TopZone from "./components/TopZone";
-import ExampleCarouselSection from "./components/Examplecarouselitem";
-import SunHeroExample from "./components/Sunheroexample";
+import SunHeroExample from "./components/Carousel/SunHeroExample";
 
 export default function Home() {
   return (
@@ -21,17 +20,22 @@ export default function Home() {
         <SnapSection index={0} id="main" className="relative z-10">
         <main className="mx-auto flex w-[70vw] max-w-none flex-1 flex-col items-stretch justify-start gap-6 py-0 sm:py-12 lg:py-16">
           <TopZone className="max-w-none" />
+
           <section
-            className="relative w-full overflow-visible"
+            className="relative h-[350px] w-full overflow-visible"
           >
             <HeroNoiseBackdrop />
+
+            <div className="absolute pb-25 inset-0 flex items-center justify-center">
+                <SunHeroExample />
+            </div>
           </section>
+
           <BottomTickerZone className="max-w-none" style={{ maxWidth: "none" }} />
         </main>
         </SnapSection>
         <SnapSection index={1} id="other" className="relative z-10">
           <div className="relative z-10">
-            <SunHeroExample />
           </div>
         </SnapSection>
       </SnapScroll>
