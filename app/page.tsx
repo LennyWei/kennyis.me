@@ -5,6 +5,7 @@ import { SnapSection, SnapScroll } from "./components/SnapScroll";
 import ThinHeader from "./components/ThinHeader";
 import TopZone from "./components/TopZone";
 import ExampleCarouselSection from "./components/Examplecarouselitem";
+import SunHeroExample from "./components/Sunheroexample";
 
 export default function Home() {
   return (
@@ -30,7 +31,7 @@ export default function Home() {
         </SnapSection>
         <SnapSection index={1} id="other" className="relative z-10">
           <div className="relative z-10">
-            <ExampleCarouselSection />
+            <SunHeroExample />
           </div>
         </SnapSection>
       </SnapScroll>
