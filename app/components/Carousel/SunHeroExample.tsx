@@ -16,9 +16,9 @@ export default function SunHeroExample() {
       height={700}
       travelDistance={800} // > the 200px sun icon, so it fully clears the mask
       minSpeedFactor={0.03}
-      enterDurationMs={1500}
+      enterDurationMs={1200}
       slowDurationMs={2000}
-      exitDurationMs={1500}
+      exitDurationMs={1200}
       arcHeight={60} // dips down slightly ("U") as it crosses center
       scaleBoost={1.50} // 15% larger at the peak of the dip
       fps={12} // retro/stop-motion look — try removing this for fully smooth

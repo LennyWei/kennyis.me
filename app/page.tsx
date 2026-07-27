@@ -5,6 +5,8 @@ import { SnapSection, SnapScroll } from "./components/SnapScroll";
 import ThinHeader from "./components/ThinHeader";
 import TopZone from "./components/TopZone";
 import SunHeroExample from "./components/Carousel/SunHeroExample";
+import { ContentGrid } from "./components/ContentGrid";
+import { AboutSection } from "./components/Section Components/AboutMe";
 
 export default function Home() {
   return (
@@ -35,8 +37,8 @@ export default function Home() {
         </main>
         </SnapSection>
         <SnapSection index={1} id="other" className="relative z-10">
-          <div className="relative z-10">
-          </div>
+          <AboutSection>
+          </AboutSection>
         </SnapSection>
       </SnapScroll>
 
