@@ -74,27 +74,47 @@ export function ContentGrid({
   width = "100%",
   gap = "0px",
   className = "",
-  showGuides = false,
+  showGuides = true,
   children,
 }: ContentGridProps) {
+  const gridTemplateRows = rowSizes ? rowSizes.join(" ") : `repeat(${rows}, 1fr)`;
+  const gridTemplateColumns = colSizes ? colSizes.join(" ") : `repeat(${cols}, 1fr)`;
+
   const style: CSSProperties = {
     display: "grid",
-    gridTemplateRows: rowSizes ? rowSizes.join(" ") : `repeat(${rows}, 1fr)`,
-    gridTemplateColumns: colSizes ? colSizes.join(" ") : `repeat(${cols}, 1fr)`,
+    gridTemplateRows,
+    gridTemplateColumns,
     height,
     width,
     gap,
-    ...(showGuides
-      ? {
-          backgroundImage:
-            `repeating-linear-gradient(to right, rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 1px, transparent 1px, transparent calc(100% / ${cols})),` +
-            `repeating-linear-gradient(to bottom, rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 1px, transparent 1px, transparent calc(100% / ${rows}))`,
-        }
-      : {}),
+    position: "relative",
   };
 
   return (
     <div className={className} style={style}>
+      {showGuides && (
+        // Reuses the exact same track template as the real grid, so the
+        // guide lines land on true track boundaries even when rowSizes/
+        // colSizes are uneven — a background-gradient approach can't do
+        // this since it can only divide space evenly.
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            gridTemplateRows,
+            gridTemplateColumns,
+            gap,
+            pointerEvents: "none",
+            zIndex: 9999,
+          }}
+        >
+          {Array.from({ length: rows * cols }).map((_, i) => (
+            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.15)" }} />
+          ))}
+        </div>
+      )}
       {children}
     </div>
   );

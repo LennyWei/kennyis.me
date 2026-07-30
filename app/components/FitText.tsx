@@ -3,7 +3,7 @@
 import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 
 /**
- * FitText
+ * FitText - only for one line text
  * -------
  * Scales its text content so it exactly fills the width (and optionally
  * height) of its parent container — like a magazine masthead that's been

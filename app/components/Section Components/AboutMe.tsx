@@ -5,6 +5,8 @@ export function AboutSection() {
     <ContentGrid
       rows={6}
       cols={4}
+      rowSizes={["1fr", "1fr", "1fr", "1fr", "1fr", "auto"]}
+      colSizes={["2fr", "2fr", "1fr", "1fr"]}
       height="600px"
       width="70vw"
       gap="1.5rem"

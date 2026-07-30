@@ -7,6 +7,8 @@ import TopZone from "./components/TopZone";
 import SunHeroExample from "./components/Carousel/SunHeroExample";
 import { ContentGrid } from "./components/ContentGrid";
 import { AboutSection } from "./components/Section Components/AboutMe";
+import { FilmDamage, DEFAULT_FILM_DAMAGE_FRAMES } from "./components/FilmDamage";
+import { preload } from "react-dom";
 
 export default function Home() {
   return (
@@ -32,8 +34,9 @@ export default function Home() {
                 <SunHeroExample />
             </div>
           </section>
-
+          <FilmDamage tileHeight={512} cycleLength={16}>
           <BottomTickerZone className="max-w-none" style={{ maxWidth: "none" }} />
+          </FilmDamage>
         </main>
         </SnapSection>
         <SnapSection index={1} id="other" className="relative z-10">
