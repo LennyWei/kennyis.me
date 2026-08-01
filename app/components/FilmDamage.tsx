@@ -64,7 +64,7 @@ export function FilmDamage({
   frames = DEFAULT_FILM_DAMAGE_FRAMES,
   tileHeight = DEFAULT_FILM_DAMAGE_TILE_HEIGHT,
   holdMs = [333, 333],
-  cycleLength = 14,
+  cycleLength = 6,
   className,
   children,
 }: FilmDamageProps) {

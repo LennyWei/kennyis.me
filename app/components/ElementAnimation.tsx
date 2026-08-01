@@ -10,6 +10,8 @@ export type SlideStep = {
   duration?: number;
   ease?: Easing | Easing[];
   delay?: number;
+  /** Reverse stagger order for this step (e.g. right-to-left instead of left-to-right) */
+  reverseStagger?: boolean;
 };
 
 export type SpinStep = {
@@ -18,6 +20,7 @@ export type SpinStep = {
   duration?: number;
   ease?: Easing | Easing[];
   delay?: number;
+  reverseStagger?: boolean;
 };
 
 export type FadeStep = {
@@ -26,6 +29,7 @@ export type FadeStep = {
   duration?: number;
   ease?: Easing | Easing[];
   delay?: number;
+  reverseStagger?: boolean;
 };
 
 export type ScaleStep = {
@@ -34,6 +38,7 @@ export type ScaleStep = {
   duration?: number;
   ease?: Easing | Easing[];
   delay?: number;
+  reverseStagger?: boolean;
 };
 
 export type PauseStep = { type: "pause"; duration: number };
@@ -47,6 +52,7 @@ export type CustomStep = {
   type: "custom";
   keyframes: Record<string, unknown>;
   transition?: Record<string, unknown>;
+  reverseStagger?: boolean;
 };
 
 export type AnimationStep =
@@ -73,6 +79,14 @@ type StepTransition = {
   ease?: Easing | Easing[];
   [key: string]: unknown;
 };
+
+/**
+ * Range (in seconds) to draw a random per-element delay from.
+ * Pass `true` to derive a range of [0, stagger] from the `stagger` prop,
+ * or supply an explicit { min, max } range directly.
+ */
+export type RandomStaggerConfig = { min: number; max: number };
+export type RandomStaggerOption = boolean | RandomStaggerConfig;
 
 function normalizeTargets(target: AnimateTarget) {
   return target instanceof Element ? [target] : Array.from(target);
@@ -106,18 +120,60 @@ function getInitialForStep(step?: AnimationStep): Record<string, unknown> | unde
   }
 }
 
+function resolveRandomRange(
+  randomStagger: RandomStaggerOption | undefined,
+  stagger: number | undefined,
+): RandomStaggerConfig | undefined {
+  if (!randomStagger) return undefined;
+  if (randomStagger === true) {
+    // Derive a sensible default range from `stagger` if no explicit range given.
+    return { min: 0, max: stagger ?? 0.5 };
+  }
+  return randomStagger;
+}
+
+/**
+ * Computes the per-element stagger delay.
+ *
+ * If `randomStagger` is set, each element gets an independently randomized
+ * delay drawn from the resolved range (re-rolled every time this runs, so
+ * every idle loop iteration gets a fresh random offset — this is what makes
+ * elements feel like they're drifting instead of lockstepping). `reverse`
+ * has no effect in the random case since there's no meaningful "direction"
+ * to a randomized delay.
+ *
+ * Otherwise falls back to the original linear index * stagger behavior, with
+ * `reverse` mirroring the index (e.g. right-to-left instead of left-to-right,
+ * assuming elements are in left-to-right DOM/selector order).
+ */
 function applyStagger(
   transition: StepTransition,
   index: number,
-  stagger?: number,
+  stagger: number | undefined,
+  total: number,
+  reverse?: boolean,
+  randomStagger?: RandomStaggerOption,
 ): StepTransition {
+  const randomRange = resolveRandomRange(randomStagger, stagger);
+
+  if (randomRange) {
+    const { min, max } = randomRange;
+    const randomDelay = min + Math.random() * (max - min);
+    return {
+      ...transition,
+      delay: (transition.delay ?? 0) + randomDelay,
+    };
+  }
+
   if (!stagger) {
     return transition;
   }
 
+  const effectiveIndex = reverse ? total - 1 - index : index;
+
   return {
     ...transition,
-    delay: (transition.delay ?? 0) + index * stagger,
+    delay: (transition.delay ?? 0) + effectiveIndex * stagger,
   };
 }
 
@@ -166,17 +222,34 @@ async function animateTarget(
   keyframes: Record<string, unknown>,
   transition: StepTransition,
   stagger?: number,
+  reverseStagger?: boolean,
+  randomStagger?: RandomStaggerOption,
 ) {
   const targets = normalizeTargets(target);
 
-  if (targets.length <= 1 || !stagger) {
+  if (targets.length <= 1 || (!stagger && !randomStagger)) {
+    // Single element case still benefits from randomStagger (adds a random
+    // delay before this particular cycle's animation), so only fully skip
+    // the per-target branch when there's truly nothing to randomize/stagger.
+    if (targets.length <= 1 && randomStagger) {
+      await animate(
+        target,
+        keyframes,
+        applyStagger(transition, 0, stagger, 1, reverseStagger, randomStagger),
+      );
+      return;
+    }
     await animate(target, keyframes, transition);
     return;
   }
 
   await Promise.all(
     targets.map((element, index) =>
-      animate(element, keyframes, applyStagger(transition, index, stagger)),
+      animate(
+        element,
+        keyframes,
+        applyStagger(transition, index, stagger, targets.length, reverseStagger, randomStagger),
+      ),
     ),
   );
 }
@@ -188,6 +261,7 @@ async function runStep(
   rotation: { current: number },
   stagger?: number,
   fps?: number,
+  randomStagger?: RandomStaggerOption,
 ) {
   switch (step.type) {
     case "pause":
@@ -195,7 +269,7 @@ async function runStep(
       return;
     case "parallel":
       await Promise.all(
-        step.steps.map((s) => runStep(animate, target, s, rotation, stagger, fps)),
+        step.steps.map((s) => runStep(animate, target, s, rotation, stagger, fps, randomStagger)),
       );
       return;
     case "slide": {
@@ -214,6 +288,8 @@ async function runStep(
           delay: step.delay ?? 0,
           }, fps),
         stagger,
+        step.reverseStagger,
+        randomStagger,
       );
       return;
     }
@@ -229,6 +305,8 @@ async function runStep(
           delay: step.delay ?? 0,
         }, fps),
         stagger,
+        step.reverseStagger,
+        randomStagger,
       );
       return;
     }
@@ -243,6 +321,8 @@ async function runStep(
           delay: step.delay ?? 0,
         }, fps),
         stagger,
+        step.reverseStagger,
+        randomStagger,
       );
       return;
     case "scale":
@@ -256,6 +336,8 @@ async function runStep(
           delay: step.delay ?? 0,
         }, fps),
         stagger,
+        step.reverseStagger,
+        randomStagger,
       );
       return;
     case "custom":
@@ -265,6 +347,8 @@ async function runStep(
         step.keyframes,
         applyFpsThrottling(step.transition ?? {}, fps),
         stagger,
+        step.reverseStagger,
+        randomStagger,
       );
       return;
   }
@@ -276,6 +360,26 @@ export interface UseElementAnimationOptions {
   targetSelector?: string;
   /** stagger delay in seconds between matched children, only used with targetSelector */
   stagger?: number;
+  /**
+   * Randomize per-element delay instead of the linear `stagger` value. Pass
+   * `true` to draw from [0, stagger], or an explicit { min, max } range in
+   * seconds. Re-randomized every time a step runs, so idle loops re-roll
+   * each cycle instead of settling into a fixed pattern.
+   *
+   * On its own this still lets elements re-sync at the end of every idle
+   * loop cycle (they all wait on each other before looping again). Combine
+   * with `independentIdle` for elements that never sync back up.
+   */
+  randomStagger?: RandomStaggerOption;
+  /**
+   * When true (requires targetSelector), each matched element runs its idle
+   * animation on its own independent loop instead of all elements waiting
+   * for each other before restarting. This is what gives a true "everything
+   * bouncing at its own random pace" look rather than a synchronized wave
+   * that periodically snaps back into alignment. `loadIn` is unaffected and
+   * still plays as a single synced entrance.
+   */
+  independentIdle?: boolean;
   /** Target frame rate for the animations (e.g., 12 for a retro/stop-motion feel) */
   fps?: number;
 }
@@ -284,6 +388,8 @@ export function useElementAnimation({
   config,
   targetSelector,
   stagger,
+  randomStagger,
+  independentIdle = false,
   fps = 12,
 }: UseElementAnimationOptions = {}) {
   const [scope, animate] = useAnimate();
@@ -308,8 +414,14 @@ export function useElementAnimation({
     if (stagger && !targetSelector) {
       console.warn("useElementAnimation: `stagger` has no effect without `targetSelector`.");
     }
-  }, [stagger, targetSelector]);
-  
+    if (randomStagger && !targetSelector) {
+      console.warn("useElementAnimation: `randomStagger` has no effect without `targetSelector`.");
+    }
+    if (independentIdle && !targetSelector) {
+      console.warn("useElementAnimation: `independentIdle` has no effect without `targetSelector`.");
+    }
+  }, [stagger, randomStagger, independentIdle, targetSelector]);
+
   useEffect(() => {
     if (!config || (!config.loadIn?.length && !config.idle?.length)) return;
     let cancelled = false;
@@ -320,17 +432,54 @@ export function useElementAnimation({
       return Array.from(root.querySelectorAll(targetSelector));
     }
 
-    async function play(steps: AnimationStep[]) {
+    async function play(
+      steps: AnimationStep[],
+      target: AnimateTarget,
+      rot: { current: number },
+      useStagger: boolean,
+    ) {
       for (const step of steps) {
         if (cancelled) return;
-        await runStep(animate, resolveTarget(), step, rotation, stagger, fps);
+        await runStep(
+          animate,
+          target,
+          step,
+          rot,
+          useStagger ? stagger : undefined,
+          fps,
+          randomStagger,
+        );
       }
     }
 
     (async () => {
-      if (config.loadIn?.length) await play(config.loadIn);
-      while (!cancelled && config.idle?.length) {
-        await play(config.idle);
+      // Entrance always plays as a single synced group, staggered as configured.
+      if (config.loadIn?.length) {
+        await play(config.loadIn, resolveTarget(), rotation, true);
+      }
+
+      if (!config.idle?.length) return;
+
+      if (independentIdle && targetSelector) {
+        const root = scope.current as Element | null;
+        if (!root) return;
+        const elements = Array.from(root.querySelectorAll(targetSelector));
+
+        // Each element gets its own rotation state and its own async loop —
+        // none of them wait on each other, so with randomStagger they drift
+        // apart into an organic, uncoordinated rhythm.
+        elements.forEach((el) => {
+          const rot = { current: rotation.current };
+          (async () => {
+            while (!cancelled) {
+              await play(config.idle!, el, rot, false);
+            }
+          })();
+        });
+      } else {
+        while (!cancelled && config.idle?.length) {
+          await play(config.idle, resolveTarget(), rotation, true);
+        }
       }
     })();
 

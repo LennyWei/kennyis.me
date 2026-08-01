@@ -111,7 +111,7 @@ export function ContentGrid({
           }}
         >
           {Array.from({ length: rows * cols }).map((_, i) => (
-            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.15)" }} />
+            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.7)" }} />
           ))}
         </div>
       )}
@@ -145,6 +145,8 @@ export function GridBlock({
   const style: CSSProperties = {
     gridColumn: `${colStart} / span ${colSpan}`,
     gridRow: `${rowStart} / span ${rowSpan}`,
+    minHeight: 0,
+    minWidth: 0,
   };
 
   return (

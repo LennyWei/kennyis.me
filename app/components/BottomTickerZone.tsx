@@ -35,6 +35,7 @@ export type BottomZoneIconProps = {
   gapRight?: number | string;
   style?: CSSProperties;
   animation?: ElementAnimationConfig;
+  stretch?: boolean;
 };
 
 type IconBaseProps = BottomZoneIconProps & {
@@ -67,6 +68,7 @@ function IconBase({
   gapRight = DEFAULT_RIGHT_GAP,
   style,
   animation,
+  stretch = false,
 }: IconBaseProps) {
   const scope = useElementAnimation({ config: animation });
   const initial = getInitialFromConfig(animation);
@@ -93,6 +95,42 @@ function IconBase({
         marginRight: gapRight,
         ...style,
       }}
+    />
+  );
+}
+
+type IconFillProps = {
+  src: string;
+  color?: string;
+  className?: string;
+  animation?: ElementAnimationConfig;
+  fit?: "stretch" | "cover" | "contain";
+};
+
+export function IconFill({
+  src,
+  color = DEFAULT_ICON_COLOR,
+  className = "",
+  animation,
+  fit = "cover",
+}: IconFillProps) {
+  const maskSize =
+    fit === "stretch" ? "100% 100%" : fit; // "cover" | "contain" pass straight through
+
+  return (
+    <IconBase
+      src={src}
+      color={color}
+      width="100%"
+      height="100%"
+      gapLeft={0}
+      gapRight={0}
+      className={`!block h-full w-full ${className}`}
+      style={{
+        maskSize,
+        WebkitMaskSize: maskSize,
+      }}
+      animation={animation}
     />
   );
 }

@@ -20,7 +20,7 @@ export default function TopZone({
         text-center ${className}`.trim()}
       style={style}
     >
-      <FilmDamage tileHeight={512} cycleLength={16}>
+      <FilmDamage tileHeight={512}>
       <h1
         className="select-none text-balance text-[clamp(5rem,12vw,10rem)] leading-[0.9] tracking-[0.005em] text-[#f32333] drop-shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
         style={{ fontFamily: '"UnifrakturMaguntia", serif' }}
