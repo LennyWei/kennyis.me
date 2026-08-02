@@ -94,6 +94,16 @@ interface FitParagraphSVGProps {
    * "spacingAndGlyphs" also stretches the letterforms themselves.
    */
   adjust?: "words" | "spacing" | "spacingAndGlyphs";
+  /**
+   * "horizontal" (default) wraps/justifies along the container's width, text
+   * reads left-to-right, block grows/shrinks in height with content — same
+   * as before. "vertical" wraps/justifies along the container's HEIGHT
+   * instead (so give it a container with a fixed height, e.g. a GridBlock
+   * with a rowSpan), text is rotated 90° to read bottom-to-top, and the
+   * block grows/shrinks in WIDTH with content instead of height — handy for
+   * filling a tall narrow column.
+   */
+  orientation?: "horizontal" | "vertical";
 }
 
 interface LineData {
@@ -163,20 +173,31 @@ export function FitParagraphSVG({
   justifyLastLine = false,
   lastLineAlign = "left",
   adjust = "words",
+  orientation = "horizontal",
 }: FitParagraphSVGProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const probeRef = useRef<HTMLSpanElement>(null);
-  const [width, setWidth] = useState(0);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [paragraphs, setParagraphs] = useState<LineData[][]>([]);
   const [resolvedFontSize, setResolvedFontSize] = useState(fontSize ?? 16);
 
-  // Track the container's actual width — that's the only dimension we need
-  // up front, since height is derived from however many lines we wrap into.
+  const isVertical = orientation === "vertical";
+  // The axis text wraps/justifies along. Horizontal: the container's width,
+  // same as before. Vertical: the container's HEIGHT instead, since that's
+  // now the "long" reading direction before we rotate the whole block 90°.
+  const wrapWidth = isVertical ? containerSize.height : containerSize.width;
+
+  // Track the container's actual size. We only strictly need one dimension
+  // (width for horizontal, height for vertical) but tracking both is cheap
+  // and keeps the logic symmetric.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const update = () => setWidth(el.getBoundingClientRect().width);
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setContainerSize({ width: rect.width, height: rect.height });
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -188,7 +209,7 @@ export function FitParagraphSVG({
   // targetLines is set, binary-search font size first; otherwise use the
   // literal fontSize prop.
   useEffect(() => {
-    if (!width || !probeRef.current) return;
+    if (!wrapWidth || !probeRef.current) return;
 
     const computed = getComputedStyle(probeRef.current);
     const buildFont = (fs: number) =>
@@ -209,7 +230,7 @@ export function FitParagraphSVG({
       for (let i = 0; i < 24; i++) {
         const mid = (lo + hi) / 2;
         ctx.font = buildFont(mid);
-        const trialLines = wrapParagraphs(ctx, rawParagraphs, width);
+        const trialLines = wrapParagraphs(ctx, rawParagraphs, wrapWidth);
         const count = trialLines.reduce((n, p) => n + p.length, 0);
 
         if (count <= targetLines) {
@@ -222,9 +243,9 @@ export function FitParagraphSVG({
     }
 
     ctx.font = buildFont(finalSize);
-    setParagraphs(wrapParagraphs(ctx, rawParagraphs, width));
+    setParagraphs(wrapParagraphs(ctx, rawParagraphs, wrapWidth));
     setResolvedFontSize(finalSize);
-  }, [children, width, fontSize, targetLines, minFontSize, maxFontSize]);
+  }, [children, wrapWidth, fontSize, targetLines, minFontSize, maxFontSize]);
 
   const lineHeightPx = resolvedFontSize * lineHeight;
   const paraGapPx = paragraphSpacing ?? lineHeightPx * 0.5;
@@ -236,7 +257,11 @@ export function FitParagraphSVG({
     <div
       ref={containerRef}
       className={containerClassName}
-      style={{ width: "100%", height: "auto" }}
+      style={
+        isVertical
+          ? { width: "auto", height: "100%" }
+          : { width: "100%", height: "auto" }
+      }
     >
       {/* Invisible probe so we can read the real computed font that
           className/style resolve to — canvas measureText needs a font string. */}
@@ -248,8 +273,31 @@ export function FitParagraphSVG({
         .
       </span>
 
-      {width > 0 && paragraphs.length > 0 && (
-        <svg width={width} height={totalHeight} viewBox={`0 0 ${width} ${totalHeight}`}>
+      {wrapWidth > 0 && paragraphs.length > 0 && (() => {
+        // Everything below is drawn in "virtual" unrotated space: x runs
+        // along wrapWidth (the reading direction), y runs down through
+        // totalHeight (the stack of lines). For horizontal orientation that
+        // virtual space IS the final svg, so no transform is needed.
+        //
+        // For vertical, we keep drawing in that exact same virtual space
+        // (zero changes to the per-line math below) and instead rotate the
+        // whole block -90° about its own center, then re-center that
+        // rotated block inside a swapped-dimension viewBox — same trick as
+        // FitTextSVG's orientation="vertical". Concretely:
+        //   translate(to new center) rotate(-90) translate(-old center)
+        const displayWidth = isVertical ? totalHeight : wrapWidth;
+        const displayHeight = isVertical ? wrapWidth : totalHeight;
+        const groupTransform = isVertical
+          ? `translate(${displayWidth / 2} ${displayHeight / 2}) rotate(-90) translate(${-wrapWidth / 2} ${-totalHeight / 2})`
+          : undefined;
+
+        return (
+          <svg
+            width={displayWidth}
+            height={displayHeight}
+            viewBox={`0 0 ${displayWidth} ${displayHeight}`}
+          >
+            <g transform={groupTransform}>
           {(() => {
             let y = resolvedFontSize * 0.85; // baseline offset for the first line
             const rendered: JSX.Element[] = [];
@@ -265,7 +313,7 @@ export function FitParagraphSVG({
                 // single word has no inter-word gap to stretch. Falls back
                 // to the character-stretch method below in that edge case.
                 if (adjust === "words" && shouldJustify && line.words.length > 1) {
-                  const extra = width - line.naturalWidth;
+                  const extra = wrapWidth - line.naturalWidth;
                   const gap = line.spaceWidth + extra / (line.words.length - 1);
 
                   let x = 0;
@@ -301,10 +349,10 @@ export function FitParagraphSVG({
                   let anchor: "start" | "middle" | "end" = "start";
                   if (!shouldJustify) {
                     if (lastLineAlign === "right") {
-                      xPos = width;
+                      xPos = wrapWidth;
                       anchor = "end";
                     } else if (lastLineAlign === "center") {
-                      xPos = width / 2;
+                      xPos = wrapWidth / 2;
                       anchor = "middle";
                     }
                   }
@@ -315,7 +363,7 @@ export function FitParagraphSVG({
                       x={xPos}
                       y={y}
                       textAnchor={anchor}
-                      textLength={doStretch ? width : undefined}
+                      textLength={doStretch ? wrapWidth : undefined}
                       lengthAdjust={
                         doStretch
                           ? adjust === "spacingAndGlyphs"
@@ -338,8 +386,10 @@ export function FitParagraphSVG({
 
             return rendered;
           })()}
-        </svg>
-      )}
+            </g>
+          </svg>
+        );
+      })()}
     </div>
   );
 }

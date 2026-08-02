@@ -163,6 +163,10 @@ export function GlobeLightIcon(props: BottomZoneIconProps) {
   return <IconBase src="/icons/stash--globe-light.svg" {...props} />;
 }
 
+export function TrophyIcon(props: BottomZoneIconProps) {
+  return <IconBase src="/icons/trophy.svg" {...props} />;
+}
+
 function TextMarker() {
   return (
     <span

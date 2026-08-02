@@ -40,7 +40,7 @@ export function AboutSection() {
       cols={5}
       rowSizes={["1fr", "1fr", "0.7fr", "0.3fr", "1.5fr", "0.5fr",]}
       colSizes={["1.5fr", "0.5fr", "4fr", "1fr", "1fr"]}
-      height="600px"
+      height="700px"
       width="70vw"
       gap="0.5rem"
       className="mx-auto"

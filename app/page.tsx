@@ -10,6 +10,7 @@ import { AboutSection } from "./components/Section Components/AboutMe";
 import { FilmDamage, DEFAULT_FILM_DAMAGE_FRAMES } from "./components/FilmDamage";
 import { preload } from "react-dom";
 import { SilvaneSection } from "./components/Section Components/Silvane";
+import { BrainBrawlSection } from "./components/Section Components/BrainBrawl";
 
 export default function Home() {
   return (
@@ -54,6 +55,9 @@ export default function Home() {
 
         <SnapSection index={2} id="projects" className="relative z-10">
           <SilvaneSection></SilvaneSection>
+        </SnapSection>
+        <SnapSection index={2} id="projects" className="relative z-10">
+          <BrainBrawlSection></BrainBrawlSection>
         </SnapSection>
       </SnapScroll>
 

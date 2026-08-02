@@ -17,7 +17,7 @@ idle: [
 ],
 };
 
-export function SilvaneSection() {
+export function BrainBrawlSection() {
 
   const scope = useElementAnimation({ 
     config,
@@ -26,62 +26,86 @@ export function SilvaneSection() {
     independentIdle: true,
   });
 
+  const color = "#2553e8"
+
   return (
     <ContentGrid
       rows={4}
-      cols={6}
-      rowSizes={["4fr", "2fr", "4fr", "0.8fr"]}
-      colSizes={["2fr","1fr", "1fr", "1fr", "1fr", "2fr"]}
+      cols={5}
+      rowSizes={["2.5fr", "1.5fr", "1.5fr", "0.5fr"]}
+      colSizes={["1fr","0.8fr", "1.2fr", "1fr","1fr"]}
       height="700px"
       width="70vw"
       gap="0.8rem"
       className="mx-auto"
-      showGuides = {false}
+      showGuides = {true}
     >
-      {/* running around gif*/}
+      {/* main game */}
       <GridBlock
         rowStart={1}
         rowSpan={1}
-        colStart={1}
-        colSpan={2}
+        colStart={2}
+        colSpan={4}
         className="overflow-hidden"
       >
         <img
-          src="/silvane/silvane1.gif"
+          src="/hackpsu/hackpsu1.png"
           alt="Portrait"
-          className="h-full w-full scale-101 object-cover object-[center_50%]"
+          className="h-full w-full scale-101 object-cover object-[center_80%]"
         />
       </GridBlock>
 
       {/* Title */}
       <GridBlock
-      rowStart={2}
-      rowSpan={1}
+      rowStart={1}
+      rowSpan={2}
       colStart={1}
-      colSpan={2}
+      colSpan={1}
+      className="p-4 bg-[#3670f7]"
       >
       
-      <div className="relative h-full w-full">
-      <FitTextSVG className="font-bold uppercase fill-[#68fcaf]"
+      <div className="relative h-full w-full z-10 ">
+      <FitParagraphSVG className="font-bold uppercase fill-[#000000] "
       style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
-      axis="xy"
+      fontSize={120}
+      lineHeight={0.9}
+      adjust="spacingAndGlyphs"
+      justifyLastLine
+      orientation="vertical"
+      paragraphSpacing={1}
       >
-      SILVANE
-      </FitTextSVG>
+      {
+        ["BRAIN", "BRAWL"]
+      }
+      </FitParagraphSVG>
       </div>
       </GridBlock>
         
-      {/* bottom left gif */}
+      {/* bottom left  */}
       <GridBlock
-      rowStart={3}
+      rowStart={2}
       rowSpan={1}
-      colStart={1}
+      colStart={2}
       colSpan={2}
       className="overflow-hidden">
         <img
-          src="/silvane/silvane2.gif"
+          src="/hackpsu/hackpsu2.jpg"
           alt="Portrait"
-          className="h-full w-full scale-120 object-cover object-[center_50%]"
+          className="h-full w-full object-cover object-[center_25%]"
+        />
+      </GridBlock>
+
+      {/* bottom left  */}
+      <GridBlock
+      rowStart={2}
+      rowSpan={1}
+      colStart={4}
+      colSpan={2}
+      className="overflow-hidden">
+        <img
+          src="/hackpsu/hackpsu4.jpg"
+          alt="Portrait"
+          className="h-full w-full object-cover scale-100 object-[center_33%]"
         />
       </GridBlock>
       
@@ -91,10 +115,9 @@ export function SilvaneSection() {
       rowSpan={1}
       colStart={1}
       colSpan={2}
-      className="border-1 border-[#68fcaf] p-1"
+      className="border-1 border-[#3670f7] p-1"
       >
-
-        <FitTextSVG className="font-bold  fill-[#68fcaf]"
+        <FitTextSVG className="font-bold  fill-[#3670f7]"
         style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
         axis="xy"
         >
@@ -102,89 +125,72 @@ export function SilvaneSection() {
         </FitTextSVG>
       </GridBlock>
 
-      {/* Right Pic */}
-      <GridBlock
-      rowStart={1}
-      rowSpan={3}
-      colStart={6}
-      colSpan={1}
-      className="overflow-hidden">
-        <img
-          src="/silvane/silvane3.gif"
-          alt="Portrait"
-          className="h-full w-full scale-101 object-cover object-[center_90%]"
-        />
-      </GridBlock>
-
 
 
       {/* Main Body */}
       <GridBlock
-      rowStart={1}
-      rowSpan={4}
-      colStart={3}
+      rowStart={3}
+      rowSpan={1}
+      colStart={1}
       colSpan={3}
       >
       <FitParagraphSVG
-        fontSize={40}
+        fontSize={20}
         lineHeight={1.1}
-        className="fill-[#68fcaf]"
+        className="fill-[#3670f7]"
         style={{ fontFamily: '"Lato", sans-serif' }}
         adjust="spacing"
       >
         {[
-          "Published a 2D souls-like video game on itch.io.",
-          "Built an modular enemy AI system using FSMs, creating 3 unique enemies and 2 bosses.",
-          "Designed an inventory system with crafting mechanics."
+          "Developed a Full Stack web app using React, Flask, ",
+  
 
         ]}
         
       </FitParagraphSVG>
       </GridBlock>
-
+      
       {/* tools used */}
       <GridBlock
       rowStart={4}
       rowSpan={1}
       colStart={3}
-      colSpan={4}
+      colSpan={3}
       className="p-1"
       >
-        <FitTextSVG className="font-bold  fill-[#68fcaf]"
+        <FitTextSVG className="font-bold  fill-[#3670f7]"
         style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
         axis="xy"
         >
         Tools:   Unity  C#  Piskel  FreeSound  Sonu.ai
         </FitTextSVG>
       </GridBlock>
-
-      {/* knight image bot right*/}
+      
+      {/* Star */}
       <GridBlock
       rowStart={3}
-      rowSpan={1}
-      colStart={3}
-      colSpan={3}
-      className="">
-        <div
-        ref = {scope}
-        className="flex justify-items">
-        <img
-          src="/silvane/knight.png"
-          alt="Portrait"
-          className="knight overflow-visible w-full h-full scale-50 translate-y-20 object-cover [image-rendering:pixelated]"
-        />
-        <img
-          src="/silvane/knight.png"
-          alt="Portrait"
-          className="knight overflow-visible w-full h-full scale-50 -scale-x-50 translate-y-20 object-cover [image-rendering:pixelated]"
-        />
-        <img
-          src="/silvane/knight.png"
-          alt="Portrait"
-          className="knight overflow-visible w-full h-full scale-50 -scale-x-50 translate-y-20 object-cover [image-rendering:pixelated]"
-        />
-        </div>
+      rowSpan={2}
+      colStart={5}
+      colSpan={1}
+      className="flex items-center justify-center gap-0">
+
+        <IconFill
+        src="/icons/trophy.svg"
+        fit="cover"
+        animation={{
+          idle: [
+            { type: "scale", to:1.1, duration: 1.4, ease: "easeInOut" },
+            { type: "pause", duration: 1 },
+            { type: "scale", to:1.0, duration: 1.4, ease: "easeInOut" },
+            { type: "pause", duration: 1 },
+          ],
+        }}
+        color="#f7bd1b"
+        >
+        </IconFill>
       </GridBlock>
+
+
     </ContentGrid>
   );
 }
