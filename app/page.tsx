@@ -11,6 +11,7 @@ import { FilmDamage, DEFAULT_FILM_DAMAGE_FRAMES } from "./components/FilmDamage"
 import { preload } from "react-dom";
 import { SilvaneSection } from "./components/Section Components/Silvane";
 import { BrainBrawlSection } from "./components/Section Components/BrainBrawl";
+import { SkillsSection } from "./components/Section Components/Skills";
 
 export default function Home() {
   return (
@@ -42,9 +43,12 @@ export default function Home() {
         </main>
         </SnapSection>
 
+
         <SnapSection index={1} id="about" className="relative z-10">
           <AboutSection></AboutSection>
         </SnapSection>
+
+        <SkillsSection></SkillsSection>
 
         <h1 
         className="mx-auto select-none text-balance text-[clamp(2rem,6vw,5rem)] leading-[0.9] tracking-[0.005em] text-[#f32333] drop-shadow-[0_10px_40px_rgba(0,0,0,0.35)]"

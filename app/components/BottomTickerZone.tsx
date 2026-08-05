@@ -12,15 +12,15 @@ export interface BottomZoneProps {
 }
 
 const DEFAULT_MESSAGES = [
-  "ENEMY HIT: 120 ON [AGENT]",
-  "SPOTTED MULTIPLE MIDDROPPING SPIKE A LONG",
-  "ROTATING TO B SITE NOW",
-  "NEED HEALS / UTILITY PLEASE",
-  "NICE SHOT, GREAT ROUND!",
-  "LET'S ECO AND BUY NEXT",
-  "DON'T PEEK, LET THEM PUSH",
-  "PLAY FOR TIME, THEY HAVE TO DEFUSE",
-  "BUYING YOU A VANDAL, DROP ME A SHORTY",
+  "WELCOME TO MY PORTFOLIO WEBSITE",
+  "THIS GRAPHIC-DESIGN-HEAVY STYLE ",
+  "IS INSPIRED BY A MUSIC VIDEO FOR THE GAME VALORANT",
+  "THE VIDEO IS NAMED \"LAST SHOT\"",
+  "I LOVED THE ANIMATION SO MUCH I MADE THIS",
+  "IT LOOKS LIKE A MOVIE POSTER",
+  "CLICK ON THE FIREBALLS ABOVE",
+  "TO JUMP TO CERTAIN SECTIONS",
+  "OR SIMPLY SCROLL TO THEM",
 ];
 
 export type BottomZoneIconProps = {
@@ -55,7 +55,7 @@ function toCssSize(value: number | string | undefined, fallback: number) {
   return typeof value === "number" ? `${value}px` : value;
 }
 
-function IconBase({
+export function IconBase({
   src,
   className = "",
   size = DEFAULT_ICON_SIZE,

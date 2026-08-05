@@ -32,13 +32,13 @@ export function BrainBrawlSection() {
     <ContentGrid
       rows={4}
       cols={5}
-      rowSizes={["2.5fr", "1.5fr", "1.5fr", "0.5fr"]}
-      colSizes={["1fr","0.8fr", "1.2fr", "1fr","1fr"]}
+      rowSizes={["3fr", "1.0fr", "1.5fr", "0.2fr"]}
+      colSizes={["0.9fr","0.8fr", "1.2fr", "1fr","1fr"]}
       height="700px"
       width="70vw"
-      gap="0.8rem"
+      gap="0.0rem"
       className="mx-auto"
-      showGuides = {true}
+      showGuides = {false}
     >
       {/* main game */}
       <GridBlock
@@ -46,7 +46,7 @@ export function BrainBrawlSection() {
         rowSpan={1}
         colStart={2}
         colSpan={4}
-        className="overflow-hidden"
+        className="overflow-hidden pb-2"
       >
         <img
           src="/hackpsu/hackpsu1.png"
@@ -87,7 +87,7 @@ export function BrainBrawlSection() {
       rowSpan={1}
       colStart={2}
       colSpan={2}
-      className="overflow-hidden">
+      className="overflow-hidden pr-2">
         <img
           src="/hackpsu/hackpsu2.jpg"
           alt="Portrait"
@@ -132,19 +132,20 @@ export function BrainBrawlSection() {
       rowStart={3}
       rowSpan={1}
       colStart={1}
-      colSpan={3}
+      colSpan={4}
+      className="pt-2"
       >
       <FitParagraphSVG
-        fontSize={20}
-        lineHeight={1.1}
+        fontSize={27}
+        lineHeight={1.2}
         className="fill-[#3670f7]"
         style={{ fontFamily: '"Lato", sans-serif' }}
         adjust="spacing"
       >
         {[
-          "Developed a Full Stack web app using React, Flask, ",
-  
-
+          "Designed a Full Stack web app using Next.js, Typescript, Flask, Gemini API, and Vercel",
+          "Gamified Study tool that utilizes pdf's of user notes/lectures to generate personalized enemies and questions.",
+          "Submitted to HackPSU - Won \"Best Use Of Gemini API\"",
         ]}
         
       </FitParagraphSVG>
@@ -155,7 +156,7 @@ export function BrainBrawlSection() {
       rowStart={4}
       rowSpan={1}
       colStart={3}
-      colSpan={3}
+      colSpan={2}
       className="p-1"
       >
         <FitTextSVG className="font-bold  fill-[#3670f7]"
@@ -172,16 +173,16 @@ export function BrainBrawlSection() {
       rowSpan={2}
       colStart={5}
       colSpan={1}
-      className="flex items-center justify-center gap-0">
+      className="flex items-center justify-center gap-0 border-4 rounded-2xl border-yellow-300 z-0">
 
         <IconFill
         src="/icons/trophy.svg"
         fit="cover"
         animation={{
           idle: [
-            { type: "scale", to:1.1, duration: 1.4, ease: "easeInOut" },
+            { type: "scale", to:1.1, duration: 0.5, ease: "easeInOut" },
             { type: "pause", duration: 1 },
-            { type: "scale", to:1.0, duration: 1.4, ease: "easeInOut" },
+            { type: "scale", to:1.0, duration: 0.5, ease: "easeInOut" },
             { type: "pause", duration: 1 },
           ],
         }}
