@@ -93,13 +93,19 @@ export function SilvaneSection() {
       colSpan={2}
       className="border-1 border-[#68fcaf] p-1"
       >
-
-        <FitTextSVG className="font-bold  fill-[#68fcaf]"
-        style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
-        axis="xy"
+        <a
+          href="https://lennykiang.itch.io/silvane"
+          target="_blank"
+          rel="noreferrer"
+          className="block h-full w-full"
         >
-        https://lennykiang.itch.io/silvane
-        </FitTextSVG>
+          <FitTextSVG className="font-bold fill-[#68fcaf]"
+          style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
+          axis="xy"
+          >
+          lennykiang.itch.io/silvane
+          </FitTextSVG>
+        </a>
       </GridBlock>
 
       {/* Right Pic */}

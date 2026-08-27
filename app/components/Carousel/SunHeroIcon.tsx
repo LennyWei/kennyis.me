@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 import { motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import type { CarouselRenderMeta } from "./CarouselManager";
 import { createFrameLimiter } from "./CarouselFrameLimiter";
- 
+import { useSnapScrollOptional } from "../SnapScroll";
+
+
 /**
  * The sun ray shape, traced from sun1.svg. Original file was a 1078x1078
  * square with two layers: an opaque background rect, and this ray path,
@@ -29,6 +31,8 @@ export interface SunHeroItem {
   /** Fills any transparent parts of imageSrc. Defaults to a dark neutral. */
   holeBackgroundColor?: string;
   targetSectionId?: string;
+  /** Whether to apply CSS pixelated rendering to the image. */
+  pixelated?: boolean;
 }
  
 export interface SunHeroIconProps {
@@ -40,6 +44,7 @@ export interface SunHeroIconProps {
   fastSpinDegPerSec?: number;
   /** Rotation speed (deg/sec) while the carousel item is in its slow middle pass. */
   slowSpinDegPerSec?: number;
+
 }
  
 export function SunHeroIcon({
@@ -79,11 +84,19 @@ export function SunHeroIcon({
  
   const holeDiameter = size * HOLE_DIAMETER_RATIO;
   const holeOffset = size * HOLE_CENTER_RATIO - holeDiameter / 2;
- 
+  // ...inside SunHeroIcon component:
+  const snap = useSnapScrollOptional();
+
   const handleClick = () => {
     if (!item.targetSectionId) return;
-    document.getElementById(item.targetSectionId)?.scrollIntoView({ behavior: "smooth" });
+    if (snap) {
+      snap.scrollTo(item.targetSectionId);
+    } else {
+      // fallback if rendered outside a <SnapScroll>
+      document.getElementById(item.targetSectionId)?.scrollIntoView({ behavior: "smooth" });
+    }
   };
+
  
   return (
     <button
@@ -110,10 +123,10 @@ export function SunHeroIcon({
       {/* Image, clipped to the same circle as the hole so it never bleeds into the ray gaps */}
       <div
         className="absolute overflow-hidden rounded-full flex items-center justify-center"
-        style={{ width: holeDiameter, height: holeDiameter, left: holeOffset, top: holeOffset }}
+        style={{ imageRendering: item.pixelated ? "pixelated" : "auto", width: holeDiameter*0.8, height: holeDiameter*0.8, left: holeOffset*(1.0/0.8), top: holeOffset*(1.0/0.8) }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={item.imageSrc} alt="" className="h-[0%] w-[0%] object-cover" draggable={false} />
+        <img src={item.imageSrc} alt="" className="h-[100%] w-[100%] object-cover" draggable={false} />
       </div>
  
 

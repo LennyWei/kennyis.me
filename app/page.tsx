@@ -12,6 +12,10 @@ import { preload } from "react-dom";
 import { SilvaneSection } from "./components/Section Components/Silvane";
 import { BrainBrawlSection } from "./components/Section Components/BrainBrawl";
 import { SkillsSection } from "./components/Section Components/Skills";
+import { Anton, Noto_Sans_SC } from "next/font/google";
+
+const anton = Anton({ weight: "400", subsets: ["latin"] });
+const notoSC = Noto_Sans_SC({ weight: ["400", "900"], subsets: ["latin"] })
 
 export default function Home() {
   return (
@@ -29,11 +33,9 @@ export default function Home() {
         <main className="mx-auto flex w-[70vw] max-w-none flex-1 flex-col items-stretch justify-start gap-6 py-0 sm:py-12 lg:py-16">
           <TopZone className="max-w-none" />
 
-          <section
-            className="relative h-[350px] w-full overflow-visible"
-          >
+          <section className="relative h-[clamp(220px,32vw,420px)] w-full overflow-visible">
             <HeroNoiseBackdrop />
-            <div className="absolute pb-25 inset-0 flex items-center justify-center">
+            <div className="absolute pb-25 inset-0 flex items-stretch justify-center">
                 <SunHeroExample />
             </div>
           </section>
@@ -42,26 +44,31 @@ export default function Home() {
           </FilmDamage>
         </main>
         </SnapSection>
-
-
         <SnapSection index={1} id="about" className="relative z-10">
-          <AboutSection></AboutSection>
+          <AboutSection />
         </SnapSection>
 
-        <SkillsSection></SkillsSection>
-
-        <h1 
-        className="mx-auto select-none text-balance text-[clamp(2rem,6vw,5rem)] leading-[0.9] tracking-[0.005em] text-[#f32333] drop-shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
-        style={{ fontFamily: '"UnifrakturMaguntia", serif' }}
+        <SnapSection
+          index={2}
+          id="projects"
+          className="relative z-10 flex items-center justify-center"
+          minHeight="40vh"
+          align="center"
         >
+          <h1
+            className="mx-auto select-none text-balance text-[clamp(2rem,6vw,5rem)] leading-[0.9] tracking-[0.005em] text-[#f32333] drop-shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
+            style={{ fontFamily: '"UnifrakturMaguntia", serif' }}
+          >
             Projects
-        </h1>
-
-        <SnapSection index={2} id="projects" className="relative z-10">
-          <SilvaneSection></SilvaneSection>
+          </h1>
         </SnapSection>
-        <SnapSection index={2} id="projects" className="relative z-10">
-          <BrainBrawlSection></BrainBrawlSection>
+
+        <SnapSection index={3} id="silvane" className="relative z-10">
+          <SilvaneSection />
+        </SnapSection>
+
+        <SnapSection index={4} id="brainbrawl" className="relative z-10">
+          <BrainBrawlSection />
         </SnapSection>
       </SnapScroll>
 

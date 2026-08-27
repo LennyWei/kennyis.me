@@ -5,187 +5,93 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useReducedMotion, type MotionValue } from "framer-motion";
 import { createFrameLimiter } from "./CarouselFrameLimiter";
 
-/**
- * CarouselManager
- * ----------------
- * A content-agnostic carousel "engine." It owns:
- *   - the clip mask (the visible window items slide through)
- *   - ONE continuous left-moving motion per item: fast in from the right
- *     edge, smoothly slowing into a still-moving middle pass, then smoothly
- *     speeding back up and out past the left edge.
- *   - index/direction state, autoplay, and manual prev/next
- *
- * The whole thing is driven by a single speed curve (`speedFactorAt`)
- * rather than three separate eased tweens stitched together. That matters:
- * stitched segments have no guarantee their velocities match at the seams,
- * which is what reads as a "rigid" jump. This curve is built from
- * smootherstep, which has zero first AND second derivative at both of its
- * edges — so it blends into the flat "slow" plateau, and the plateau blends
- * back into full speed, with no kink anywhere. Position is then obtained by
- * numerically integrating that speed curve every frame (Euler integration),
- * not by keyframing position directly.
- *
- * It knows nothing about what an item looks like. You pass `items` (any
- * shape) and a `renderItem(item, meta)` function; `meta` tells your item
- * component whether it's active, roughly what part of the pass it's in, and
- * — crucially — a live `speedFactor` MotionValue your item can read inside
- * its own per-frame animation to stay physically in sync with the
- * carousel's actual current speed (see SunHeroIcon's spin for an example).
- */
-
 export type CarouselPhase = "enter" | "slow" | "exit";
 
 export interface CarouselRenderMeta {
   index: number;
   isActive: boolean;
   phase: CarouselPhase;
-  /** True while paused (currently: only via requestPause, if pauseOnHover is on). */
   isPaused: boolean;
-  /**
-   * Call with `true`/`false` to pause/resume the carousel. The manager
-   * deliberately does NOT pause on hovering its own bounding box — it has
-   * no idea what shape your item actually is (a sun icon isn't a
-   * rectangle). Instead, attach this to whatever element(s) in your item
-   * should count as "hovering the icon" — e.g. the image circle and the
-   * rays SVG, but not the transparent padding around them. No-ops if
-   * `pauseOnHover` is false.
-   */
   requestPause: (paused: boolean) => void;
-  /**
-   * Continuous speed multiplier for the current pass, updated every
-   * animation frame outside of React state (read it inside your own
-   * useAnimationFrame / rAF loop, not during render). Ranges from
-   * `minSpeedFactor` (during the slow middle pass) up to 1 (at full speed,
-   * entering/exiting).
-   */
   speedFactor: MotionValue<number>;
-  /** The `minSpeedFactor` this pass was configured with — use it to normalize `speedFactor` to a clean 0–1 range if you want. */
   minSpeedFactor: number;
-  /**
-   * The `fps` this carousel is configured with (undefined = native frame
-   * rate). If your item runs its own per-frame animation (like a spin),
-   * pass this to `createFrameLimiter` from `./frameLimiter` so it steps at
-   * the same rate instead of staying smooth while the carousel goes choppy.
-   */
   fps?: number;
+  /**
+   * measuredWidth / baseWidth — how much smaller/larger the carousel's
+   * actual rendered box is vs. the reference width the travelDistance/
+   * arcHeight px values were tuned at. Multiply any px-based sizing inside
+   * your renderItem (icon size, stroke widths, etc.) by this so it scales
+   * in step with the carousel instead of staying a fixed pixel size while
+   * the track around it grows or shrinks.
+   */
+  scaleFactor: number;
 }
 
 export interface CarouselManagerProps<T> {
   items: T[];
   renderItem: (item: T, meta: CarouselRenderMeta) => ReactNode;
 
-  /** Size of the clip-mask window. Height is required so the mask has a box. */
+  /** CSS width of the outer box. Default "100%" fills the parent, so it lines up with anything else sized off that same parent. */
   width?: number | string;
-  height: number;
-
   /**
-   * Fixed px distance the item travels beyond each edge before it's fully
-   * off-screen. Tune this to your item's rendered width — it needs to be at
-   * least as large as the item for it to fully clear the box.
+   * Pixel height of the clip-mask window. Omit this (recommended) and the
+   * carousel measures its parent's rendered height instead, so it always
+   * matches a sibling that's also h-full/w-full of that parent, live on
+   * resize. Pass a number only if you want a fixed height regardless of
+   * the parent.
    */
+  height?: number;
+  /**
+   * The width (px) travelDistance/arcHeight below were originally tuned
+   * at. The carousel scales those values by (actual rendered width /
+   * baseWidth), so the motion looks proportionally identical at any
+   * container size instead of a fixed-size pass inside a shrinking or
+   * growing box.
+   */
+  baseWidth?: number;
+
   travelDistance?: number;
-
-  /**
-   * Speed multiplier during the slow middle plateau, relative to full speed
-   * (1 = no slowdown at all, 0 = would fully stop — kept exclusive of 0 so
-   * it's always still moving). Try 0.1–0.2 for a pronounced but still-alive
-   * crawl.
-   */
   minSpeedFactor?: number;
-
-  /**
-   * Shapes the transition into/out of the slow plateau. Defaults to
-   * `easeSmootherstep` (smoothest — zero acceleration at the seams too).
-   * Try `easeSmoothstep` for something a touch snappier, `easeCubicInOut`
-   * for snappier still, or pass your own `(t: number) => number` mapping
-   * 0..1 to 0..1.
-   */
   blendEase?: (t: number) => number;
-
-  /**
-   * How far (px) the item dips vertically at the peak of its arc — positive
-   * dips downward (a "U"), negative arcs upward. 0 disables the arc.
-   */
   arcHeight?: number;
-
-  /**
-   * How much larger the item gets at the peak of the arc, as a fraction
-   * (0.15 = 15% larger at the middle). 0 disables the scale change.
-   */
   scaleBoost?: number;
-
-  /**
-   * Shapes the arc/scale bump over the item's spatial progress (0 = just
-   * entered, 0.5 = dead center, 1 = about to exit). Defaults to `bumpHann`.
-   * Swap in your own `(progress: number) => number` for a sharper or
-   * asymmetric peak — it doesn't need to stay 0 at the edges, but zero
-   * there is what keeps the blend kink-free.
-   */
   arcBump?: (progress: number) => number;
-
-  /**
-   * Quantizes visual updates to roughly this many frames per second,
-   * independent of the browser's actual refresh rate — e.g. `12` for a
-   * deliberately choppy, retro/stop-motion feel. Durations are unaffected;
-   * only how often the change is drawn is throttled. Default: undefined
-   * (native frame rate, fully smooth).
-   */
   fps?: number;
-
-  /** Timing, in ms, for each portion of the single continuous pass. */
   enterDurationMs?: number;
   slowDurationMs?: number;
   exitDurationMs?: number;
-
-  /** Soft-edge fade at the mask boundaries instead of a hard clip. 0 disables it. */
   edgeFadeWidth?: number;
-
   autoplay?: boolean;
-  /** Master switch for hover-pausing. When false, `meta.requestPause` no-ops — nothing pauses no matter what your item does. */
   pauseOnHover?: boolean;
   loop?: boolean;
-
   showControls?: boolean;
   accentColor?: string;
   borderColor?: string;
   textColor?: string;
-
   className?: string;
   style?: CSSProperties;
 }
 
-/** Ken Perlin's smootherstep, normalized to t in [0,1]: zero 1st AND 2nd derivative at both edges. This is the default — no kink blending in or out of the slow plateau. */
 export function easeSmootherstep(t: number): number {
   const c = Math.min(1, Math.max(0, t));
   return c * c * c * (c * (c * 6 - 15) + 10);
 }
 
-/** Classic smoothstep: zero 1st derivative at both edges, but not 2nd — a slightly snappier blend than smootherstep. */
 export function easeSmoothstep(t: number): number {
   const c = Math.min(1, Math.max(0, t));
   return c * c * (3 - 2 * c);
 }
 
-/** Cubic ease-in-out: noticeably snappier onset/exit than either smoothstep variant. */
 export function easeCubicInOut(t: number): number {
   const c = Math.min(1, Math.max(0, t));
   return c < 0.5 ? 4 * c * c * c : 1 - Math.pow(-2 * c + 2, 3) / 2;
 }
 
-/**
- * A "bump": 0 at both t=0 and t=1, peaking at 1 at t=0.5, with zero
- * derivative at both edges (a raised cosine / Hann window) so it blends in
- * and out with no kink — same smoothness property as the ease functions
- * above, just shaped as a hill instead of a step. Used to drive the arc
- * height and scale boost so they peak exactly when the item is spatially
- * centered, and fade to nothing right as it crosses the mask edges.
- */
 export function bumpHann(progress: number): number {
   const c = Math.min(1, Math.max(0, progress));
   return (1 - Math.cos(2 * Math.PI * c)) / 2;
 }
 
-/** Speed multiplier at normalized time u (0..1): 1 -> minFactor -> 1. `easeFn` shapes each blend (applied to a local 0..1 t within that blend region only — the plateau in between is always flat). */
 function speedFactorAt(
   u: number,
   slowStart: number,
@@ -207,6 +113,7 @@ export default function CarouselManager<T>({
   renderItem,
   width = "100%",
   height,
+  baseWidth = 1200,
   travelDistance = 150,
   minSpeedFactor = 0.15,
   blendEase = easeSmootherstep,
@@ -232,6 +139,30 @@ export default function CarouselManager<T>({
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState<CarouselPhase>("enter");
   const [isPaused, setIsPaused] = useState(false);
+
+  // Tracks the carousel's actual rendered box so it can (a) stay in
+  // lockstep with whatever else shares its parent, e.g. a background
+  // behind it, and (b) let the px-tuned motion values below scale to match.
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [measured, setMeasured] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setMeasured({ width: rect.width, height: rect.height });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const effectiveHeight = height ?? measured.height;
+  // Round so sub-pixel resize jitter doesn't keep restarting the pass.
+  const roundedWidth = Math.round(measured.width / 4) * 4;
+  const scaleFactor = roundedWidth > 0 ? roundedWidth / baseWidth : 1;
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -275,10 +206,13 @@ export default function CarouselManager<T>({
   // Drives one continuous right-to-left pass for the current activeIndex.
   useEffect(() => {
     if (safeItems.length === 0) return;
+    if (effectiveHeight === 0) return; // wait for a real measured box before starting
 
     const runId = ++runIdRef.current;
-    const fromX = travelDistance;
-    const toX = -travelDistance;
+    const scaledTravel = travelDistance * scaleFactor;
+    const scaledArc = arcHeight * scaleFactor;
+    const fromX = scaledTravel;
+    const toX = -scaledTravel;
     const distance = toX - fromX;
     const totalDurationMs = enterDurationMs + slowDurationMs + exitDurationMs;
     const slowStart = enterDurationMs / totalDurationMs;
@@ -300,9 +234,6 @@ export default function CarouselManager<T>({
       return () => window.clearTimeout(id);
     }
 
-    // One-time normalization constant: ∫0..1 speedFactor(u) du, via trapezoidal rule.
-    // Needed so that integrating speed over totalDurationMs lands exactly on `toX`,
-    // regardless of how much the slow plateau reduces the average speed.
     const SAMPLES = 200;
     let z = 0;
     let prevF = speedFactorAt(0, slowStart, slowEnd, minSpeedFactor, blendEase);
@@ -344,13 +275,10 @@ export default function CarouselManager<T>({
         const bump = arcBump(normalizedProgress);
         const isDone = elapsedMs >= totalDurationMs;
 
-        // Underlying math above always runs at full real frame rate (correct
-        // timing). Only whether we PUSH it to the motion values is throttled
-        // — that's what turns "smooth" into "choppy" rather than "slow."
         if (limiter.shouldStep(dt) || isDone) {
           speedFactor.set(f);
           x.set(isDone ? toX : fromX + distance * normalizedProgress);
-          y.set(isDone ? 0 : arcHeight * bump);
+          y.set(isDone ? 0 : scaledArc * bump);
           scale.set(isDone ? 1 : 1 + scaleBoost * bump);
         }
 
@@ -373,7 +301,7 @@ export default function CarouselManager<T>({
       clearTimers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex, safeItems.length]);
+  }, [activeIndex, safeItems.length, roundedWidth, effectiveHeight]);
 
   const activeItem = safeItems[activeIndex];
 
@@ -389,11 +317,25 @@ export default function CarouselManager<T>({
 
   return (
     <div
-      className={`relative w-full ${className}`.trim()}
+      ref={outerRef}
+      className={`relative h-full w-full ${className}`.trim()}
       style={{ maxWidth: typeof width === "number" ? `${width}px` : width, ...style }}
     >
-      <div className="relative overflow-hidden" style={{ height: `${height}px`, ...maskStyle }}>
-        <motion.div className="absolute inset-0" style={{ x, y, scale, willChange: "transform" }}>
+      <div
+        className="relative h-full"
+        style={{
+          height: effectiveHeight ? `${effectiveHeight}px` : "100%",
+          // Clips left/right at the box edges but leaves top/bottom unbounded
+          // (huge inset values), so vertical overflow — the sun's rays during
+          // the arc bump — paints freely instead of being cut at the box height.
+          // Deliberately not using `overflow-x-hidden overflow-y-visible` here:
+          // per spec, if one overflow axis is non-visible, the other silently
+          // computes to `auto` instead of `visible` — so it still clips vertically.
+          clipPath: "inset(-9999px 0px -9999px 0px)",
+          ...maskStyle,
+        }}
+      >
+        <motion.div className="absolute inset-0"  style={{ x, y, scale, willChange: "transform" }}>
           {activeItem !== undefined
             ? renderItem(activeItem, {
                 index: activeIndex,
@@ -404,6 +346,7 @@ export default function CarouselManager<T>({
                 minSpeedFactor,
                 requestPause,
                 fps,
+                scaleFactor,
               })
             : null}
         </motion.div>
@@ -429,21 +372,6 @@ export default function CarouselManager<T>({
           >
             →
           </button>
-          {/* <div className="absolute bottom-25 left-1/2 flex -translate-x-1/2 gap-1.5 z-0">
-            {safeItems.map((_, dotIndex) => (
-              <button
-                key={dotIndex}
-                type="button"
-                aria-label={`Go to item ${dotIndex + 1}`}
-                onClick={() => goTo(dotIndex)}
-                className="h-1.5 rounded-full transition-all"
-                style={{
-                  width: dotIndex === activeIndex ? 18 : 6,
-                  background: dotIndex === activeIndex ? accentColor : borderColor,
-                }}
-              />
-            ))}
-          </div> */}
         </>
       ) : null}
     </div>

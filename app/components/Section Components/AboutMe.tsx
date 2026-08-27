@@ -78,7 +78,7 @@ export function AboutSection() {
       
       <div className="relative h-full w-full">
       <FitTextSVG className="font-bold uppercase fill-[#f7bd1b]"
-      style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
+      style={{ fontFamily: '"Playfair Display", serif', textAlign: 'center' }}
       axis="xy"
       >
       About Me
@@ -124,7 +124,7 @@ export function AboutSection() {
       >
 
         <FitTextSVG className="font-bold uppercase fill-[#f7bd1b]"
-        style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
+        style={{ fontFamily: '"Noto Sans SC", sans-serif', textAlign: 'center' }}
         axis="xy"
         >
         这是我
@@ -182,11 +182,18 @@ export function AboutSection() {
         fontSize={43}
         lineHeight={1.3}
         className="fill-[#f7bd1b] "
-        style={{ fontFamily: '"Lato", sans-serif' }}
+        style={{ fontFamily: '"Space Grotesk", sans-serif' }}
         adjust="spacing"
-        justifyLastLine
+        targetLines={3}
+        paragraphSpacing={1}
       >
-        Computer science student who loves creating and the creative process. Recently interested in game development, AI API tools, and full stack app development.  
+        {/* {
+          ["Computer science student who loves creating and the ",
+            "creative process. Recently interested in game ",
+            "development, AI API tools, and full stack app development."]
+        } */}
+
+        Computer science student who loves creating and the creative process. Recently interested in game development, AI API tools, and full stack development.
       </FitParagraphSVG>
       </GridBlock>
 

@@ -7,6 +7,10 @@ import { BarcodeIcon, GlobeLightIcon, IconFill, StarFourPointsIcon } from "../Bo
 import { FitParagraphSVG } from "../FitParagraphSVG";
 import { ElementAnimationConfig, useElementAnimation } from "../ElementAnimation";
 import { FilmDamage } from "../FilmDamage";
+import { Anton, Noto_Sans_SC } from "next/font/google";
+
+const anton = Anton({ weight: "400", subsets: ["latin"] });
+const notoSC = Noto_Sans_SC({ weight: ["400", "900"], subsets: ["latin"] });
 
 
 const config: ElementAnimationConfig = {
@@ -32,7 +36,7 @@ export function BrainBrawlSection() {
     <ContentGrid
       rows={4}
       cols={5}
-      rowSizes={["3fr", "1.0fr", "1.5fr", "0.2fr"]}
+      rowSizes={["3fr", "1.0fr", "1.5fr", "0.3fr"]}
       colSizes={["0.9fr","0.8fr", "1.2fr", "1fr","1fr"]}
       height="700px"
       width="70vw"
@@ -61,14 +65,14 @@ export function BrainBrawlSection() {
       rowSpan={2}
       colStart={1}
       colSpan={1}
-      className="p-4 bg-[#3670f7]"
+      className="p-3 bg-[#3670f7]"
       >
       
       <div className="relative h-full w-full z-10 ">
       <FitParagraphSVG className="font-bold uppercase fill-[#000000] "
-      style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
+      style={{ fontFamily: 'anton', textAlign: 'center' }}
       fontSize={120}
-      lineHeight={0.9}
+      lineHeight={1.0}
       adjust="spacingAndGlyphs"
       justifyLastLine
       orientation="vertical"
@@ -117,12 +121,19 @@ export function BrainBrawlSection() {
       colSpan={2}
       className="border-1 border-[#3670f7] p-1"
       >
+        <a
+          href="https://github.com/LennyWei/BrainBrawl"
+          target="_blank"
+          rel="noreferrer"
+          className="block h-full w-full"
+        >
         <FitTextSVG className="font-bold  fill-[#3670f7]"
         style={{ fontFamily: '"Lato", sans-serif', textAlign: 'center' }}
         axis="xy"
         >
-        https://lennykiang.itch.io/silvane
+        github.com/LennyWei/BrainBrawl
         </FitTextSVG>
+        </a>
       </GridBlock>
 
 
@@ -133,7 +144,7 @@ export function BrainBrawlSection() {
       rowSpan={1}
       colStart={1}
       colSpan={4}
-      className="pt-2"
+      className="pt-2 pr-3"
       >
       <FitParagraphSVG
         fontSize={27}
@@ -145,7 +156,7 @@ export function BrainBrawlSection() {
         {[
           "Designed a Full Stack web app using Next.js, Typescript, Flask, Gemini API, and Vercel",
           "Gamified Study tool that utilizes pdf's of user notes/lectures to generate personalized enemies and questions.",
-          "Submitted to HackPSU - Won \"Best Use Of Gemini API\"",
+          "Submitted to HackPSU Spring 2026 - Won \"Best Use Of Gemini API\"",
         ]}
         
       </FitParagraphSVG>
@@ -173,7 +184,7 @@ export function BrainBrawlSection() {
       rowSpan={2}
       colStart={5}
       colSpan={1}
-      className="flex items-center justify-center gap-0 border-4 rounded-2xl border-yellow-300 z-0">
+      className="p-4 flex items-center justify-center gap-0 border-4 rounded-2xl border-yellow-300 z-0">
 
         <IconFill
         src="/icons/trophy.svg"
